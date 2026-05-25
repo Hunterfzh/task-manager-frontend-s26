@@ -1,39 +1,39 @@
-import { useEffect, useReducer } from 'react'
-import { TaskForm, TaskList, TasksContext, tasksReducer } from '../components'
-import axios from 'axios'
-import { Flex } from '@chakra-ui/react'
+import { useEffect, useReducer } from "react";
+import { TaskForm, TaskList, TasksContext, tasksReducer } from "../components";
+import axios from "axios";
+import { Flex } from "@chakra-ui/react";
 
 const TasksPage = () => {
-  const [tasks, dispatch] = useReducer(tasksReducer, [])
+  const [tasks, dispatch] = useReducer(tasksReducer, []);
 
   const deleteTask = async (index) => {
-    const task = tasks[index]
-    const token = localStorage.getItem('token')
+    const task = tasks[index];
+    const token = localStorage.getItem("token");
     await axios.delete(`http://localhost:8000/tasks/${task.id}`, {
       headers: {
         Authorization: `Token ${token}`,
       },
-    })
+    });
 
     dispatch({
-      type: 'set',
+      type: "set",
       tasks: tasks.filter((t) => t.id !== task.id),
-    })
-  }
+    });
+  };
 
   const updateCompleted = (index, completed) => {
     dispatch({
-      type: 'updated',
+      type: "updated",
       index,
-      field: 'completed',
+      field: "completed",
       value: completed,
-    })
-  }
+    });
+  };
 
   const updateDescription = async (index, description) => {
-    const task = tasks[index]
+    const task = tasks[index];
 
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem("token");
     const { data } = await axios.put(
       `http://localhost:8000/tasks/${task.id}`,
       {
@@ -44,68 +44,66 @@ const TasksPage = () => {
         headers: {
           Authorization: `Token ${token}`,
         },
-      },
-    )
+      }
+    );
 
     dispatch({
-      type: 'set',
+      type: "set",
       tasks: tasks.map((t) => (t.id === task.id ? data : t)),
-    })
-  }
+    });
+  };
 
   const addTask = async (description) => {
-    const token = localStorage.getItem('token')
-    const { data } = await axios.post(
-      `http://localhost:8000/tasks`,
-      {
-        description,
-        completed: false,
-      },
-      { headers: { Authorization: `Token ${token}` } },
-    )
-
-    dispatch({
-      type: 'set',
-      tasks: [...tasks, data],
-    })
-  }
+    try {
+      const token = localStorage.getItem("token");
+      const { data } = await axios.post(
+        `http://localhost:8000/tasks`,
+        { description, completed: false },
+        { headers: { Authorization: `Token ${token}` } }
+      );
+      dispatch({ type: "set", tasks: [...tasks, data] });
+    } catch {
+      // fallback: add locally if backend is unavailable
+      dispatch({ type: "added", description });
+    }
+  };
 
   useEffect(() => {
     const getTasks = async () => {
       try {
-        const token = localStorage.getItem('token')
-        const { data } = await axios.get('http://localhost:8000/tasks', {
+        const token = localStorage.getItem("token");
+        const { data } = await axios.get("http://localhost:8000/tasks", {
           headers: {
             Authorization: `Token ${token}`,
           },
-        })
+        });
 
         // setTasks(data) // if not using reducers
         dispatch({
-          type: 'set',
+          type: "set",
           tasks: data,
-        })
+        });
       } catch {
         // setTasks([])
         dispatch({
-          type: 'set',
+          type: "set",
           tasks: [],
-        })
+        });
       }
-    }
+    };
 
-    getTasks()
-  }, [])
+    getTasks();
+  }, []);
 
   return (
     // Provider
     <TasksContext value={{ deleteTask, updateCompleted, updateDescription }}>
-      <Flex direction='column' gap={2}>
+      <Flex direction="column" gap={2}>
         <TaskForm addTask={addTask} />
         <TaskList tasks={tasks} />
       </Flex>
     </TasksContext>
-  )
-}
+  );
+};
 
-export default TasksPage
+export default TasksPage;

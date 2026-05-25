@@ -6,6 +6,7 @@ const EditDescription = ({ index, description, onEdit, onCancel }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    if (!newDescription.trim()) return   // ← ADD THIS
     onEdit(index, newDescription)
   }
 

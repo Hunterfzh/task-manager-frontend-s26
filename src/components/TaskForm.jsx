@@ -6,6 +6,7 @@ const TaskForm = ({ addTask }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    if (!description.trim()) return //no empty submissions 
     addTask(description)
     setDescription('')
   }
